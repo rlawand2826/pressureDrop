@@ -1,0 +1,9 @@
+| Source                                  | Dataset                            | Details                                         |
+| --------------------------------------- | ---------------------------------- | ----------------------------------------------- |
+| *ASTM E2016-15*                       | Mesh Opening Table                 | Mesh size → Opening Width (D) & Open Area % (Q) |
+| *ASTM E674-12*                        | Perforated Sheet Table             | Hole diameter + pitch → Open Area % (P)         |
+| *Perry’s Chemical Engineers Handbook* | Discharge Coefficient (C)          | Range: 0.6 – 0.85                               |
+| *Miller’s Handbook*                   | Velocity Head Loss Coefficient (K) | Range: 1.0 – 6.0                                |
+| *ISA 75.01 Annex C*                   | Gas Properties Table               | M (Molecular Weight), k (Cp/Cv) for 40+ gases   |
+| *Unit Conversion Logic*               | In-built backend engine            | All unit conversions automated per input unit   |
+| *Darcy–Weisbach Equation*             | Core calculation method            | For both incompressible & compressible ΔP       |

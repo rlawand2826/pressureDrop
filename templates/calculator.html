@@ -1,0 +1,1274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Y Strainer Pressure Drop Calculator</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="/static/style.css" rel="stylesheet">
+</head>
+<body>
+
+<!-- ── Navbar ──────────────────────────────────────────────────────────────── -->
+<nav class="app-navbar d-flex align-items-center justify-content-between">
+  <div>
+    <div class="brand-title">⚙ Y Strainer — Pressure Drop Calculator</div>
+    <div class="brand-sub">CGS Unit System</div>
+  </div>
+  <div class="d-flex align-items-center gap-3">
+    <span class="text-white" style="font-size:.82rem;">👤 {{ username }}</span>
+    <a href="/logout" class="btn btn-outline-light btn-sm" style="font-size:.78rem;">Logout</a>
+  </div>
+</nav>
+
+<div class="container-fluid px-3 py-2">
+
+  <!-- ── Metadata row ──────────────────────────────────────────────────────── -->
+  <div class="calc-card px-3 py-2 mb-2">
+    <div class="row g-2">
+      <div class="col-md-3 col-sm-6">
+        <div class="form-label-sm">Tag No. <span style="color:#888;font-size:.78em;">(comma-separated for multiple)</span></div>
+        <input id="tag_no" type="text" class="form-control form-control-sm" placeholder="PRD-001, PRD-002, PRD-003">
+      </div>
+      <div class="col-md-3 col-sm-6">
+        <div class="form-label-sm">Fluid Name</div>
+        <input id="fluid_name" type="text" class="form-control form-control-sm" >
+      </div>
+      <div class="col-md-3 col-sm-6">
+        <div class="form-label-sm">Company / Name</div>
+        <input id="company_name" type="text" class="form-control form-control-sm" placeholder="Client name">
+      </div>
+      <div class="col-md-3 col-sm-6">
+        <div class="form-label-sm">Project No.</div>
+        <input id="project_no" type="text" class="form-control form-control-sm" placeholder="PRJ1000">
+      </div>
+      <div class="col-md-3 col-sm-6">
+        <div class="form-label-sm">Consultant Name</div>
+        <input id="consultant_name" type="text" class="form-control form-control-sm" placeholder="Consultant / Engineer">
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Main input area ───────────────────────────────────────────────────── -->
+  <div class="row g-2 mb-2">
+
+    <!-- LEFT PANEL — Fluid properties + Strainer ──────────────────────────── -->
+    <div class="col-xl-6 col-lg-6">
+      <div class="calc-card h-100">
+        <div class="section-header">Input Parameters</div>
+        <div class="px-3 py-2">
+
+          <!-- Fluid properties -->
+          <div class="row g-2 mb-2">
+            <div class="col-4">
+              <div class="form-label-sm">Density (kg/m³)</div>
+              <input id="rho" type="number" class="form-control form-control-sm"
+                     step="0.0001" min="0">
+            </div>
+            <div class="col-4">
+              <div class="form-label-sm">Viscosity (cP)</div>
+              <input id="mu_cP" type="number" class="form-control form-control-sm"
+                     step="0.0001" min="0">
+            </div>
+            <div class="col-4">
+              <div class="form-label-sm">Flow</div>
+              <div class="input-group input-group-sm">
+                <input id="flow_W" type="number" class="form-control form-control-sm"
+                       step="0.001" min="0">
+                <select id="flow_unit" class="form-select form-select-sm" style="max-width:80px">
+                  <option value="kg/hr">kg/hr</option>
+                  <option value="m3/hr">m³/hr</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Type of Strainer -->
+          <div class="mb-2">
+            <div class="form-label-sm mb-1">Type of Strainer</div>
+            <div class="d-flex flex-wrap gap-2 strainer-type-group">
+              <div class="form-check form-check-inline mb-0">
+                <input class="form-check-input" type="radio" name="strainer_type"
+                       id="type_y" value="Y-Type" checked>
+                <label class="form-check-label" for="type_y">Y-Type</label>
+              </div>
+              <div class="form-check form-check-inline mb-0">
+                <input class="form-check-input" type="radio" name="strainer_type"
+                       id="type_basket" value="Basket">
+                <label class="form-check-label" for="type_basket">Basket</label>
+              </div>
+              <div class="form-check form-check-inline mb-0">
+                <input class="form-check-input" type="radio" name="strainer_type"
+                       id="type_t" value="T-Type">
+                <label class="form-check-label" for="type_t">T-Type</label>
+              </div>
+              <div class="form-check form-check-inline mb-0">
+                <input class="form-check-input" type="radio" name="strainer_type"
+                       id="type_conical" value="Conical">
+                <label class="form-check-label" for="type_conical">Conical</label>
+              </div>
+            </div>
+
+            <!-- T-Type subtype (Monkey / Boat) — shown only when T-Type is selected -->
+            <div id="t-subtype-row" style="display:none; margin-top:6px;">
+              <div class="form-label-sm mb-1" style="color:#aaa;">T-Type variant</div>
+              <div class="d-flex gap-3">
+                <div class="form-check form-check-inline mb-0">
+                  <input class="form-check-input" type="radio" name="t_subtype"
+                         id="t_monkey" value="Monkey" checked>
+                  <label class="form-check-label" for="t_monkey">Monkey Type</label>
+                </div>
+                <div class="form-check form-check-inline mb-0">
+                  <input class="form-check-input" type="radio" name="t_subtype"
+                         id="t_boat" value="Boat">
+                  <label class="form-check-label" for="t_boat">Boat Type</label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Strainer image preview -->
+            <div id="strainer-img-wrap" style="margin-top:8px; text-align:center;">
+              <img id="strainer-img"
+                   src="/static/strainer_photos/y_type.png"
+                   alt="Y-Type Strainer"
+                   title="Click to zoom"
+                   style="max-height:140px; max-width:100%; border-radius:6px; border:1px solid #2a4a6b; background:#0d2137; padding:4px; object-fit:contain; cursor:zoom-in; transition:opacity .15s;"
+                   onclick="openImgZoom(this)">
+              <div id="strainer-img-label" style="font-size:.75rem; color:#7ab3d4; margin-top:3px;">Y-Type Strainer</div>
+            </div>
+          </div>
+          
+          <!-- Pipe NPS + Rating selection -->
+          <div class="row g-2 mb-2">
+            <div class="col-6">
+              <div class="form-label-sm">Size (NPS)</div>
+              <select id="pipe_nps_select" class="form-select form-select-sm">
+                <option value="">— Select NPS —</option>
+              </select>
+            </div>
+            <div class="col-6">
+              <div class="form-label-sm">Rating</div>
+              <select id="rating_select" class="form-select form-select-sm">
+                <option value="">— Select Rating —</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Schedule selection — hidden for Y-Type (default) -->
+          <div class="row g-2 mb-2" id="schedule-row" style="display:none">
+            <div class="col-6">
+              <div class="form-label-sm">Schedule</div>
+              <select id="schedule_select" class="form-select form-select-sm">
+                <option value="">— Select Schedule —</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Screen dimensions -->
+          <div class="row g-2 mb-2">
+            <div class="col-6">
+              <div class="form-label-sm">Length of Screen (cm)</div>
+              <input id="L_cm" type="number" class="form-control form-control-sm"
+                     step="0.001" min="0">
+            </div>
+            <div class="col-6">
+              <div class="form-label-sm">Diameter of Screen d1 (cm)</div>
+              <input id="D_screen_cm" type="number" class="form-control form-control-sm"
+                     step="0.001" min="0">
+            </div>
+          </div>
+
+          <!-- Conical: second diameter row — shown only when Conical is selected -->
+          <div id="d2-row" class="row g-2 mb-2" style="display:none;">
+            <div class="col-6"></div>
+            <div class="col-6">
+              <div class="form-label-sm">Diameter of Screen d2 (cm) <span style="color:#888;font-size:0.78em;">(smaller end; leave 0 for full cone)</span></div>
+              <input id="D_screen2_cm" type="number" class="form-control form-control-sm"
+                     step="0.001" min="0" value="0">
+            </div>
+          </div>
+
+          <!-- Computed surface areas -->
+          <div class="row g-2">
+            <div class="col-6">
+              <div class="form-label-sm">Surface Area @ 100% clean (cm²)</div>
+              <input id="disp_A100" type="text" class="form-control form-control-sm computed" readonly>
+            </div>
+            <div class="col-6">
+              <div class="form-label-sm">Surface Area @ 50% clogged (cm²)</div>
+              <input id="disp_A50" type="text" class="form-control form-control-sm computed" readonly>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT PANEL — Pipe + Mesh + Perf ──────────────────────────────────── -->
+    <div class="col-xl-6 col-lg-6">
+      <div class="calc-card h-100">
+        <div class="section-header">Screen &amp; Pipe Selection</div>
+        <div class="px-3 py-2">
+
+          <!-- Pipe dimensions -->
+          <div class="row g-2 mb-2">
+            <div class="col-4">
+              <div class="form-label-sm">Pipe ID (cm)</div>
+              <input id="D_pipe_cm" type="number" class="form-control form-control-sm"
+                     step="0.001"  min="0">
+            </div>
+            <div class="col-4">
+              <div class="form-label-sm">Cross-Section Area (cm²)</div>
+              <input id="disp_A_pipe" type="text" class="form-control form-control-sm computed" readonly>
+            </div>
+            <div class="col-4">
+              <div class="form-label-sm">α (alpha)</div>
+              <input id="disp_alpha" type="text" class="form-control form-control-sm computed" readonly>
+            </div>
+          </div>
+
+          <!-- Mesh selection -->
+          <div class="row g-2 mb-2">
+            <div class="col-8">
+              <div class="form-label-sm">Mesh Size</div>
+              <select id="mesh_select" class="form-select form-select-sm">
+                <option value="">— Select Mesh —</option>
+                <option value="NO_MESH">No Mesh (Q = 100%)</option>
+              </select>
+            </div>
+            <div class="col-4">
+              <div class="form-label-sm">% Opening Q</div>
+              <input id="Q_pct" type="number" class="form-control form-control-sm"
+                     step="0.01" min="0" max="100">
+            </div>
+          </div>
+
+          <!-- Perforation selection -->
+          <div class="row g-2 mb-2">
+            <div class="col-8">
+              <div class="form-label-sm">Perforation</div>
+              <select id="perf_select" class="form-select form-select-sm">
+                <option value="">— Select Perforation —</option>
+              </select>
+            </div>
+            <div class="col-4">
+              <div class="form-label-sm">% Opening P</div>
+              <input id="P_pct" type="number" class="form-control form-control-sm"
+                     step="0.01" min="0" max="100">
+            </div>
+          </div>
+
+          <!-- Opening width -->
+          <div class="row g-2 mb-3">
+            <div class="col-4">
+              <div class="form-label-sm">Opening Width D (cm)</div>
+              <input id="D_open_cm" type="number" class="form-control form-control-sm"
+                     min="0">
+            </div>
+            <div class="col-8 d-flex align-items-end">
+              <div id="error-banner" class="w-100">⚠ <span id="error-msg"></span></div>
+            </div>
+          </div>
+
+          <!-- Calculate button -->
+          <div class="d-grid">
+            <button id="btn-calc" class="btn">⚡ &nbsp;RESULT</button>
+          </div>
+
+          <!-- Clear button -->
+          <div class="d-grid mt-2">
+            <button id="btn-clear" class="btn btn-outline-secondary btn-sm">Clear All</button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div><!-- end main inputs row -->
+
+  <!-- ── Summary band ───────────────────────────────────────────────────────── -->
+  <div id="summary-band" class="mb-2" style="display:none">
+    <span class="sum-item"><span class="sum-label">Q: </span><span class="sum-label" id="sum_Q"></span></span>
+    <span class="sum-item"><span class="sum-label">P: </span><span class="sum-val" id="sum_P"></span></span>
+    <span class="sum-item"><span class="sum-label">D: </span><span class="sum-val" id="sum_D"></span> cm</span>
+    <span class="sum-item"><span class="sum-label">α: </span><span class="sum-val" id="sum_alpha"></span></span>
+    <span class="sum-item"><span class="sum-label">&#961;: </span><span class="sum-val" id="sum_rho"></span> kg/m³</span>
+    <span class="sum-item"><span class="sum-label">μ: </span><span class="sum-val" id="sum_mu"></span> cP</span>
+    <span class="sum-item"><span class="sum-label">Flow: </span><span class="sum-val" id="sum_flow"></span> <span id="sum_flow_unit"></span></span>
+  </div>
+
+  <!-- ── Results section ────────────────────────────────────────────────────── -->
+  <div id="results-section" style="display:none">
+    <div class="d-flex justify-content-end mb-2">
+      <button id="btn-export-pdf" class="btn btn-sm" style="background:#1a3c5e;color:#fff;font-size:.8rem;padding:6px 18px;border-radius:4px;">
+        ⬇ Export PDF Report
+      </button>
+    </div>
+    <div class="row g-2">
+
+      <!-- 50% Clogged -->
+      <div class="col-md-6">
+        <div class="result-panel clogged">
+          <div class="section-header red">Net Surface Area of Screen @ 50% Clogged Condition</div>
+          <div class="p-0">
+            <table class="result-table">
+              <tr><td>Surface area of screen</td><td id="r50_surf">—</td><td>cm²</td></tr>
+              <tr><td>Net Surface area of screen</td><td id="r50_net">—</td><td>cm²</td></tr>
+              <tr><td>Screening Area Ratio</td><td id="r50_ratio">—</td><td></td></tr>
+              <tr><td>V</td><td id="r50_V">—</td><td>cm/sec</td></tr>
+              <tr><td>Re</td><td id="r50_Re">—</td><td></td></tr>
+              <tr class="c-row"><td>C</td><td id="r50_C">—</td><td></td></tr>
+              <tr><td>K</td><td id="r50_K">—</td><td></td></tr>
+              <tr class="dp-row"><td>ΔP</td><td id="r50_dP_kg">—</td><td>kg/cm² (g)</td></tr>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- 100% Clean -->
+      <div class="col-md-6">
+        <div class="result-panel clean">
+          <div class="section-header green">Net Surface Area of Screen @ 100% Clean Condition</div>
+          <div class="p-0">
+            <table class="result-table">
+              <tr><td>Surface area of screen</td><td id="r100_surf">—</td><td>cm²</td></tr>
+              <tr><td>Net Surface area of screen</td><td id="r100_net">—</td><td>cm²</td></tr>
+              <tr><td>Screening Area Ratio</td><td id="r100_ratio">—</td><td></td></tr>
+              <tr><td>V</td><td id="r100_V">—</td><td>cm/sec</td></tr>
+              <tr><td>Re</td><td id="r100_Re">—</td><td></td></tr>
+              <tr class="c-row"><td>C</td><td id="r100_C">—</td><td></td></tr>
+              <tr><td>K</td><td id="r100_K">—</td><td></td></tr>
+              <tr class="dp-row"><td>ΔP</td><td id="r100_dP_kg">—</td><td>kg/cm² (g)</td></tr>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div><!-- end results section -->
+
+</div><!-- container -->
+
+<!-- ── Help & Support ──────────────────────────────────────────────────────── -->
+<div style="background:#1a3c5e; color:#fff; text-align:center; padding:10px 16px; margin-top:12px; font-size:.82rem;">
+  For any queries and support, contact us at
+  <a href="mailto:support.flowdrop@gmail.com" style="color:#8ec8f8; text-decoration:underline;">support.flowdrop@gmail.com</a>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- ── Terms & Conditions Modal ──────────────────────────────────────────── -->
+<div id="tnc-overlay"
+     style="display:none; position:fixed; inset:0; z-index:10000;
+            background:rgba(0,0,0,.75); backdrop-filter:blur(3px);
+            align-items:center; justify-content:center;">
+  <div style="background:#fff; border-radius:10px; width:min(760px,96vw);
+              max-height:90vh; display:flex; flex-direction:column;
+              box-shadow:0 12px 48px rgba(0,0,0,.5); overflow:hidden;">
+    <!-- Header -->
+    <div style="background:#1a3c5e; color:#fff; padding:14px 20px; flex-shrink:0;">
+      <div style="font-size:1rem; font-weight:700; letter-spacing:.3px;">
+        ⚙ Strainer Pressure Drop Calculator — Terms &amp; Conditions
+      </div>
+      <div style="font-size:.75rem; color:#a8d4f0; margin-top:2px;">
+        Please read and accept before proceeding
+      </div>
+    </div>
+    <!-- Body (scrollable) -->
+    <div style="overflow-y:auto; padding:20px 24px; font-size:.82rem;
+                color:#222; line-height:1.65; flex:1;">
+
+      <p><strong>Effective Date:</strong> <span id="tnc-date"></span></p>
+      <p>These Terms and Conditions ("Agreement") govern the use of the <strong>Strainer Pressure Drop Calculator</strong> ("Software"). By clicking <em>I Accept</em>, the user agrees to all terms stated herein.</p>
+
+      <h6 style="color:#1a3c5e; margin-top:14px;">1. Purpose and Scope</h6>
+      <p>The Software is designed to assist qualified engineers in estimating pressure drop across Y-Type, Basket, T-Type (Monkey), T-Type (Boat), and Conical strainers under clean and partially clogged conditions. Results are provided in CGS units (kg/cm²) and are intended as engineering estimates only.</p>
+
+      <h6 style="color:#1a3c5e; margin-top:14px;">2. Engineering Disclaimer</h6>
+      <p>All calculations produced by this Software are based on established fluid-dynamics formulas and reference data. However, the following limitations apply:</p>
+      <ul>
+        <li>Results are <strong>estimates</strong> and must be validated by a qualified mechanical or process engineer before use in final design, procurement, or installation decisions.</li>
+        <li>The Software does not account for factors such as fluid phase changes, two-phase flow, non-Newtonian fluids, transient conditions, fouling beyond the 50% clogged model, or site-specific installation effects.</li>
+        <li>Screen geometry inputs (diameter, length, mesh size, perforation %) must accurately represent the actual strainer to be installed. Incorrect inputs will produce incorrect results.</li>
+        <li>The user is solely responsible for verifying the suitability of any result for its intended application.</li>
+      </ul>
+
+      <h6 style="color:#1a3c5e; margin-top:14px;">3. Limitation of Liability</h6>
+      <p>The developers and distributors of this Software shall not be liable for any direct, indirect, incidental, special, or consequential damages arising from the use or misuse of results generated by the Software, including but not limited to:</p>
+      <ul>
+        <li>Equipment damage, process failure, or personal injury resulting from reliance on calculated values;</li>
+        <li>Financial losses due to incorrect specification or selection of strainers;</li>
+        <li>Any loss arising from calculations performed with incorrect or incomplete input data.</li>
+      </ul>
+
+      <h6 style="color:#1a3c5e; margin-top:14px;">4. Intellectual Property</h6>
+      <p>The Software, its source code, calculation logic, and associated documentation are proprietary. The user may not reverse-engineer, decompile, copy, redistribute, or sublicense the Software or any part thereof.</p>
+
+      <h6 style="color:#1a3c5e; margin-top:14px;">5. Data Accuracy and Input Responsibility</h6>
+      <p>The user is responsible for the accuracy of all input data, including fluid properties, flow rates, and strainer geometry. The Software performs no independent validation of physical plausibility beyond basic range checks.</p>
+
+      <h6 style="color:#1a3c5e; margin-top:14px;">6. Authorized Use</h6>
+      <p>Access to this Software is granted on a per-user, non-transferable basis. Sharing of login credentials is prohibited. Each session is logged against the authenticated username.</p>
+
+      <h6 style="color:#1a3c5e; margin-top:14px;">7. Governing Standards</h6>
+      <p>Calculations are based on principles consistent with <em>Perry's Chemical Engineers' Handbook</em> and standard fluid-mechanics references. The Software does not certify compliance with any specific national or international standard (e.g. ASME, ISO, BS) unless explicitly stated.</p>
+
+      <h6 style="color:#1a3c5e; margin-top:14px;">8. Acceptance</h6>
+      <p>By clicking <strong>I Accept</strong>, the user acknowledges that they have read, understood, and agree to be bound by these Terms and Conditions. A signed copy of this acceptance will be emailed to the administrator as a record.</p>
+
+    </div>
+    <!-- Footer -->
+    <div style="border-top:1px solid #ddd; padding:14px 20px; background:#f7f9fb;
+                display:flex; align-items:center; gap:12px; flex-shrink:0; flex-wrap:wrap;">
+      <label style="display:flex; align-items:center; gap:7px; font-size:.83rem; cursor:pointer; flex:1; min-width:200px;">
+        <input type="checkbox" id="tnc-checkbox" style="width:15px; height:15px; cursor:pointer;">
+        I have read and agree to the Terms &amp; Conditions stated above
+      </label>
+      <button id="tnc-decline-btn"
+              style="padding:6px 18px; border:1px solid #aaa; border-radius:5px;
+                     background:#fff; color:#555; font-size:.83rem; cursor:pointer;">
+        Decline &amp; Logout
+      </button>
+      <button id="tnc-accept-btn" disabled
+              style="padding:6px 22px; border:none; border-radius:5px;
+                     background:#1a3c5e; color:#fff; font-size:.83rem;
+                     cursor:not-allowed; opacity:.5; transition:all .2s;">
+        ✓ I Accept
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Image zoom lightbox ───────────────────────────────────────────────── -->
+<div id="img-lightbox" onclick="closeImgZoom()"
+     style="display:none; position:fixed; inset:0; z-index:9999;
+            background:rgba(0,0,0,.82); backdrop-filter:blur(4px);
+            align-items:center; justify-content:center; cursor:zoom-out;">
+  <div style="position:relative; max-width:90vw; max-height:90vh;">
+    <img id="lightbox-img" src="" alt=""
+         style="max-width:88vw; max-height:85vh; border-radius:8px;
+                border:2px solid #4a90c4; object-fit:contain;
+                box-shadow:0 8px 40px rgba(0,0,0,.7);">
+    <div id="lightbox-label"
+         style="text-align:center; color:#a8d4f0; font-size:.85rem; margin-top:8px;"></div>
+    <button onclick="closeImgZoom()" title="Close"
+            style="position:absolute; top:-14px; right:-14px;
+                   width:30px; height:30px; border-radius:50%;
+                   background:#1a3c5e; border:1.5px solid #4a90c4;
+                   color:#fff; font-size:1rem; line-height:1;
+                   cursor:pointer; display:flex; align-items:center; justify-content:center;">
+      &times;
+    </button>
+  </div>
+</div>
+<script>
+// ── Helpers ──────────────────────────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+const fmt = (v, d = 6) => (v !== null && v !== undefined) ? Number(v).toPrecision(7).replace(/\.?0+$/, '') : '—';
+const fmtFixed = (v, d) => (v !== null && v !== undefined) ? Number(v).toFixed(d) : '—';
+// Format ΔP: scientific notation when value would show as 0.00000 at 5dp
+const formatDP = (v) => {
+  if (v === null || v === undefined) return '—';
+  const num = Number(v);
+  return num > 0 && num < 0.000005 ? num.toExponential(3) : num.toFixed(5);
+};
+
+// ── State ────────────────────────────────────────────────────────────────────
+let pipeNPSData = [];
+let prClassData = [];
+let meshData = [];
+let perfData = [];
+let pipeScheduleData = {};   // { nps_str: [{schedule, id_mm}, ...] }
+let _lastResult = null;
+let _lastInputs = null;
+
+// ── Load lookup data on page load ────────────────────────────────────────────
+async function loadLookups() {
+  try {
+    const [npsRes, prRes, meshRes, perfRes, schedRes] = await Promise.all([
+      fetch('/lookup/pipe-nps').then(r => r.json()),
+      fetch('/lookup/pr-class').then(r => r.json()),
+      fetch('/lookup/meshes').then(r => r.json()),
+      fetch('/lookup/perforations').then(r => r.json()),
+      fetch('/lookup/pipe-schedules').then(r => r.json()),
+    ]);
+    pipeNPSData = npsRes;
+    prClassData = prRes;
+    meshData    = meshRes;
+    perfData    = perfRes;
+    // Build schedule lookup indexed by NPS
+    schedRes.forEach(s => {
+      if (!pipeScheduleData[s.nps]) pipeScheduleData[s.nps] = [];
+      pipeScheduleData[s.nps].push({ schedule: s.schedule, id_mm: s.id_mm });
+    });
+    populatePipeNPS();
+    populatePRClass();
+    populateMesh();
+    populatePerf();
+    // Y-Type is default — hide schedule on init
+    const defaultType = document.querySelector('input[name="strainer_type"]:checked')?.value;
+    $('schedule-row').style.display = (defaultType === 'Y-Type' || !defaultType) ? 'none' : '';
+  } catch(e) {
+    showError('Failed to load dropdowns: ' + e.message);
+  }
+}
+
+// ── Populate pipe NPS dropdown ────────────────────────────────────────────
+function populatePipeNPS() {
+  const sel = $('pipe_nps_select');
+  pipeNPSData.forEach(p => {
+    const opt = document.createElement('option');
+    opt.value = JSON.stringify({ nps_inch: p.nps_inch, dn_mm: p.dn_mm });
+    opt.textContent = 'NPS ' + p.nps_inch;
+    sel.appendChild(opt);
+  });
+}
+
+// ── Populate PR Class rating dropdown ───────────────────────────────────
+function populatePRClass() {
+  const sel = $('rating_select');
+  prClassData.forEach(r => {
+    const opt = document.createElement('option');
+    opt.value = r.rating;
+    opt.textContent = '#' + r.rating;
+    sel.appendChild(opt);
+  });
+}
+
+// ── Helpers for strainer type and schedule ───────────────────────────────────
+function isBasketSelected() {
+  return document.querySelector('input[name="strainer_type"]:checked')?.value === 'Basket';
+}
+function isConicalSelected() {
+  return document.querySelector('input[name="strainer_type"]:checked')?.value === 'Conical';
+}
+
+function populateScheduleDropdown(npsInch) {
+  const sel = $('schedule_select');
+  sel.innerHTML = '<option value="">— Select Schedule —</option>';
+  const entries = pipeScheduleData[npsInch] || [];
+  entries.forEach(e => {
+    const opt = document.createElement('option');
+    opt.value = JSON.stringify({ schedule: e.schedule, id_mm: e.id_mm });
+    opt.textContent = e.schedule + '  (ID: ' + e.id_mm + ' mm)';
+    sel.appendChild(opt);
+  });
+}
+
+// ── On NPS change → auto-fill Pipe ID and populate Schedule ─────────────────
+$('pipe_nps_select').addEventListener('change', () => {
+  const val = $('pipe_nps_select').value;
+  // Always populate schedule dropdown
+  if (val) {
+    populateScheduleDropdown(JSON.parse(val).nps_inch);
+  } else {
+    $('schedule_select').innerHTML = '<option value="">— Select Schedule —</option>';
+  }
+  if (isBasketSelected()) {
+    // For Basket: pipe ID comes from schedule selection, not NPS directly
+    $('D_pipe_cm').value = '';
+    $('disp_A_pipe').value = '';
+  } else {
+    if (val) {
+      const p = JSON.parse(val);
+      $('D_pipe_cm').value = (p.dn_mm / 10).toFixed(3);
+      updatePipeArea();
+    } else {
+      $('D_pipe_cm').value = '';
+      $('disp_A_pipe').value = '';
+    }
+  }
+});
+
+// ── Strainer image map ────────────────────────────────────────────────────────
+const STRAINER_IMG = {
+  'Y-Type':  { src: '/static/strainer_photos/y_type.png',  label: 'Y-Type Strainer' },
+  'Basket':  { src: '/static/strainer_photos/basket.png',  label: 'Basket Strainer' },
+  'Conical': { src: '/static/strainer_photos/conical.png', label: 'Conical Strainer' },
+  'T-Monkey':{ src: '/static/strainer_photos/t_monkey.png',label: 'T-Type Strainer (Monkey Type)' },
+  'T-Boat':  { src: '/static/strainer_photos/t_boat.png',  label: 'T-Type Strainer (Boat Type)' },
+};
+
+function updateStrainerImage() {
+  const type = document.querySelector('input[name="strainer_type"]:checked')?.value || 'Y-Type';
+  let key = type;
+  if (type === 'T-Type') {
+    const sub = document.querySelector('input[name="t_subtype"]:checked')?.value || 'Monkey';
+    key = sub === 'Boat' ? 'T-Boat' : 'T-Monkey';
+  }
+  const info = STRAINER_IMG[key] || STRAINER_IMG['Y-Type'];
+  $('strainer-img').src   = info.src;
+  $('strainer-img').alt   = info.label;
+  $('strainer-img-label').textContent = info.label;
+}
+
+// ── Show/hide Schedule row when strainer type changes ────────────────────────
+document.querySelectorAll('input[name="strainer_type"]').forEach(radio => {
+  radio.addEventListener('change', () => {
+    const basket  = isBasketSelected();
+    const conical = isConicalSelected();
+    const tType   = document.querySelector('input[name="strainer_type"]:checked')?.value === 'T-Type';
+    const yType   = document.querySelector('input[name="strainer_type"]:checked')?.value === 'Y-Type';
+    $('schedule-row').style.display   = yType ? 'none' : '';
+    $('t-subtype-row').style.display  = tType   ? '' : 'none';
+    $('d2-row').style.display         = conical ? '' : 'none';
+    const npsVal = $('pipe_nps_select').value;
+    if (basket) {
+      $('D_pipe_cm').value = '';
+      $('disp_A_pipe').value = '';
+      $('schedule_select').innerHTML = '<option value="">— Select Schedule —</option>';
+      if (npsVal) populateScheduleDropdown(JSON.parse(npsVal).nps_inch);
+    } else {
+      if (npsVal) {
+        const p = JSON.parse(npsVal);
+        $('D_pipe_cm').value = (p.dn_mm / 10).toFixed(3);
+        updatePipeArea();
+      }
+    }
+    updateSurfaceAreas();   // recalculate A100/A50 with correct formula for type
+    updateStrainerImage();
+  });
+});
+
+// ── On T-Type subtype change → update image ───────────────────────────────────
+document.querySelectorAll('input[name="t_subtype"]').forEach(radio => {
+  radio.addEventListener('change', updateStrainerImage);
+});
+
+// ── On Schedule change → auto-fill Pipe ID ────────────────────────────────────
+$('schedule_select').addEventListener('change', () => {
+  const val = $('schedule_select').value;
+  if (val) {
+    const s = JSON.parse(val);
+    $('D_pipe_cm').value = (s.id_mm / 10).toFixed(3);
+    updatePipeArea();
+  } else {
+    $('D_pipe_cm').value = '';
+    $('disp_A_pipe').value = '';
+  }
+});
+
+// ── Populate mesh dropdown ────────────────────────────────────────────────────
+function populateMesh() {
+  const sel = $('mesh_select');
+  meshData.forEach(m => {
+    const opt = document.createElement('option');
+    opt.value = JSON.stringify({ mesh: m.mesh, swg: m.swg, opening_mm: m.opening_mm, Q: m.open_area_pct });
+    opt.textContent = `${m.mesh} Mesh × ${m.swg} swg   (${m.open_area_pct}% / ${m.opening_mm}mm)`;
+    sel.appendChild(opt);
+  });
+}
+
+// ── On mesh change → auto-fill Q and D ───────────────────────────────────────
+$('mesh_select').addEventListener('change', () => {
+  const val = $('mesh_select').value;
+  if (val === 'NO_MESH') {
+    $('Q_pct').value = '100';
+    $('D_open_cm').value = '';
+  } else if (val) {
+    const m = JSON.parse(val);
+    $('Q_pct').value     = m.Q.toFixed(2);
+    $('D_open_cm').value = parseFloat((m.opening_mm / 10).toFixed(6)).toString();
+  } else {
+    $('Q_pct').value = '';
+    $('D_open_cm').value = '';
+  }
+  updateAlpha();
+});
+
+// ── Populate perforation dropdown ─────────────────────────────────────────────
+function populatePerf() {
+  const sel = $('perf_select');
+  perfData.forEach(p => {
+    const opt = document.createElement('option');
+    opt.value = JSON.stringify({ desc: p.description, P: p.open_area_pct });
+    opt.textContent = `${p.description}  (${p.open_area_pct}%)`;
+    sel.appendChild(opt);
+  });
+}
+
+// ── On perf change → auto-fill P ─────────────────────────────────────────────
+$('perf_select').addEventListener('change', () => {
+  const val = $('perf_select').value;
+  if (val) {
+    const p = JSON.parse(val);
+    $('P_pct').value = p.P.toFixed(2);
+  } else {
+    $('P_pct').value = '';
+  }
+  updateAlpha();
+});
+
+// ── Live computed fields ──────────────────────────────────────────────────────
+function updateSurfaceAreas() {
+  const D  = parseFloat($('D_screen_cm').value);
+  const L  = parseFloat($('L_cm').value);
+  if (!isNaN(D) && !isNaN(L) && D > 0 && L > 0) {
+    let A100;
+    if (isBasketSelected()) {
+      A100 = Math.PI * D * L + Math.PI * (D / 2) ** 2;
+    } else if (isConicalSelected()) {
+      const D2 = parseFloat($('D_screen2_cm').value) || 0;
+      const r1 = D / 2, r2 = D2 / 2;
+      const slant = Math.sqrt(L * L + (r1 - r2) ** 2);   // true geometric slant height
+      // Lateral + small end cap only (large end is open, not screen area)
+      A100 = Math.PI * (r1 + r2) * slant + Math.PI * r2 ** 2;
+    } else {
+      A100 = Math.PI * D * L;
+    }
+    $('disp_A100').value = A100.toFixed(7);
+    $('disp_A50').value  = (A100 / 2).toFixed(7);
+  } else {
+    $('disp_A100').value = '';
+    $('disp_A50').value  = '';
+  }
+}
+
+function updatePipeArea() {
+  const D = parseFloat($('D_pipe_cm').value);
+  if (!isNaN(D) && D > 0) {
+    $('disp_A_pipe').value = (Math.PI / 4 * D * D).toFixed(6);
+  } else {
+    $('disp_A_pipe').value = '';
+  }
+}
+
+function updateAlpha() {
+  const Q = parseFloat($('Q_pct').value);
+  const P = parseFloat($('P_pct').value);
+  if (!isNaN(Q) && !isNaN(P) && Q > 0 && P > 0) {
+    $('disp_alpha').value = ((Q / 100) * (P / 100)).toFixed(6);
+  } else {
+    $('disp_alpha').value = '';
+  }
+}
+
+// Attach live update listeners
+['D_screen_cm', 'L_cm'].forEach(id => $( id ).addEventListener('input', updateSurfaceAreas));
+$('D_screen2_cm').addEventListener('input', updateSurfaceAreas);
+$('D_pipe_cm').addEventListener('input', updatePipeArea);
+['Q_pct', 'P_pct'].forEach(id => $(id).addEventListener('input', updateAlpha));
+
+// ── Error helpers ─────────────────────────────────────────────────────────────
+function showError(msg) {
+  $('error-msg').textContent = msg;
+  $('error-banner').style.display = 'block';
+}
+function hideError() {
+  $('error-banner').style.display = 'none';
+}
+
+// ── Calculate ─────────────────────────────────────────────────────────────────
+$('btn-calc').addEventListener('click', async () => {
+  hideError();
+
+  const rho    = parseFloat($('rho').value);
+  const mu_cP  = parseFloat($('mu_cP').value);
+  const W      = parseFloat($('flow_W').value);
+  const flow_unit = $('flow_unit').value;
+  const D_pipe_cm  = parseFloat($('D_pipe_cm').value);
+  const D_screen_cm = parseFloat($('D_screen_cm').value);
+  const L_cm   = parseFloat($('L_cm').value);
+  const D_open_cm = parseFloat($('D_open_cm').value);
+  const Q_pct  = parseFloat($('Q_pct').value);
+  const P_pct  = parseFloat($('P_pct').value);
+
+  const missing = [];
+  if (isNaN(rho))         missing.push('Density');
+  if (isNaN(mu_cP))       missing.push('Viscosity');
+  if (isNaN(W))           missing.push('Flow');
+  if (isNaN(D_pipe_cm))   missing.push('Pipe ID');
+  if (isNaN(D_screen_cm)) missing.push('Screen Diameter');
+  if (isNaN(L_cm))        missing.push('Screen Length');
+  if (isNaN(D_open_cm))   missing.push('Opening Width D');
+  if (isNaN(Q_pct))       missing.push('Q%');
+  if (isNaN(P_pct))       missing.push('P%');
+
+  if (missing.length) {
+    showError('Missing inputs: ' + missing.join(', '));
+    return;
+  }
+
+  const payload = {
+    rho, mu_cP, W, flow_unit,
+    D_pipe_cm, D_screen_cm, L_cm, D_open_cm, Q_pct, P_pct,
+    strainer_type: (() => {
+      if (isBasketSelected()) return 'Basket';
+      const t = document.querySelector('input[name="strainer_type"]:checked')?.value;
+      if (t === 'T-Type') {
+        const sub = document.querySelector('input[name="t_subtype"]:checked')?.value || 'Monkey';
+        return sub === 'Boat' ? 'T-Type (Boat)' : 'T-Type (Monkey)';
+      }
+      if (t === 'Conical') return 'Conical';
+      return 'Y';
+    })(),
+    D_screen2_cm: isConicalSelected() ? (parseFloat($('D_screen2_cm').value) || 0) : 0,
+    tag_no:     $('tag_no').value     || null,
+    fluid_name: $('fluid_name').value || null,
+    project:    $('project_no').value || null,
+  };
+
+  try {
+    const resp = await fetch('/calculate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    if (!resp.ok) {
+      const err = await resp.json();
+      showError(err.detail || 'Calculation error.');
+      return;
+    }
+
+    const data = await resp.json();
+    displayResults(data, Q_pct, P_pct, D_open_cm, mu_cP);
+
+  } catch(e) {
+    showError('Network error: ' + e.message);
+  }
+});
+
+// ── Display results ────────────────────────────────────────────────────────────
+function displayResults(data, Q_pct, P_pct, D_open_cm, mu_cP) {
+  // Save for PDF export
+  _lastResult = data;
+  _lastInputs = {
+    tag_no:       $('tag_no').value,
+    schedule:     (() => { const v = $('schedule_select').value; if (!v) return ''; try { return JSON.parse(v).schedule; } catch { return v; } })(),
+    fluid_name:   $('fluid_name').value,
+    company_name: $('company_name').value,
+    project_no:   $('project_no').value,
+    pipe_nps:        (() => { const v = $('pipe_nps_select').value; if (!v) return ''; try { return JSON.parse(v).nps_inch; } catch { return ''; } })(),
+    rating:          $('rating_select').value || '',
+    consultant_name: $('consultant_name').value,
+    strainer_type:   (() => {
+      const t = document.querySelector('input[name="strainer_type"]:checked')?.value || 'Y-Type';
+      if (t === 'T-Type') {
+        const sub = document.querySelector('input[name="t_subtype"]:checked')?.value || 'Monkey';
+        return sub === 'Boat' ? 'T-Type (Boat)' : 'T-Type (Monkey)';
+      }
+      return t;
+    })(),
+    mesh_label:   $('mesh_select').options[$('mesh_select').selectedIndex]?.text || '',
+    perf_label:   $('perf_select').options[$('perf_select').selectedIndex]?.text || '',
+    rho:          $('rho').value,
+    mu_cP,
+    W:            $('flow_W').value,
+    flow_unit:    $('flow_unit').value,
+    D_pipe_cm:    $('D_pipe_cm').value,
+    D_screen_cm:  $('D_screen_cm').value,
+    L_cm:         $('L_cm').value,
+    D_open_cm,
+    Q_pct,
+    P_pct,
+    A_pipe:       $('disp_A_pipe').value,
+    A100:         $('disp_A100').value,
+  };
+  const c50  = data.clogged_50pct;
+  const c100 = data.clean_100pct;
+
+  // Summary band
+  $('sum_Q').textContent     = Q_pct;
+  $('sum_P').textContent     = P_pct;
+  $('sum_D').textContent     = D_open_cm;
+  $('sum_alpha').textContent = data.alpha.toFixed(5);
+  $('sum_rho').textContent   = $('rho').value;
+  $('sum_mu').textContent        = mu_cP;
+  $('sum_flow').textContent      = $('flow_W').value;
+  $('sum_flow_unit').textContent = $('flow_unit').value;
+
+  // 50% clogged
+  $('r50_surf').textContent  = c50.surface_area_cm2.toFixed(2);
+  $('r50_net').textContent   = c50.net_surface_area_cm2.toFixed(2);
+  $('r50_ratio').textContent = c50.screening_area_ratio.toFixed(2);
+  $('r50_V').textContent     = c50.V_cm_s.toFixed(3);
+  $('r50_Re').textContent    = c50.Re.toFixed(4);
+  $('r50_C').textContent     = c50.C;
+  $('r50_K').textContent     = c50.K.toFixed(2);
+  $('r50_dP_kg').textContent = formatDP(c50.delta_P_kg_cm2);
+
+  // 100% clean
+  $('r100_surf').textContent  = c100.surface_area_cm2.toFixed(2);
+  $('r100_net').textContent   = c100.net_surface_area_cm2.toFixed(2);
+  $('r100_ratio').textContent = c100.screening_area_ratio.toFixed(2);
+  $('r100_V').textContent     = c100.V_cm_s.toFixed(3);
+  $('r100_Re').textContent    = c100.Re.toFixed(4);
+  $('r100_C').textContent     = c100.C;
+  $('r100_K').textContent     = c100.K.toFixed(2);
+  $('r100_dP_kg').textContent = formatDP(c100.delta_P_kg_cm2);
+
+  $('summary-band').style.display   = 'block';
+  $('results-section').style.display = 'block';
+  $('results-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ── Export PDF ────────────────────────────────────────────────────────────────
+$('btn-export-pdf').addEventListener('click', () => {
+  if (!_lastResult || !_lastInputs) return;
+  const d = _lastResult;
+  const i = _lastInputs;
+  const c50  = d.clogged_50pct;
+  const c100 = d.clean_100pct;
+
+  const n  = (v, dp) => (v !== null && v !== undefined) ? Number(v).toFixed(dp) : '—';
+  const ne = (v) => (v !== null && v !== undefined) ? Number(v).toExponential(5) : '—';
+  const mu_cgs = (Number(i.mu_cP) * 0.01).toFixed(5);
+  // Escape user-supplied text fields to prevent XSS in the PDF window
+  const esc = (s) => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+  const strainerMap = {
+    'Y-Type':          'Y STRAINER',
+    'Basket':          'BASKET STRAINER',
+    'T-Type (Monkey)': 'T STRAINER (MONKEY TYPE)',
+    'T-Type (Boat)':   'T STRAINER (BOAT TYPE)',
+    'T-Type':          'T STRAINER',
+    'Conical':         'CONICAL STRAINER',
+  };
+  const strainerHeading = strainerMap[i.strainer_type] || i.strainer_type;
+
+  const meshPart = i.mesh_label ? i.mesh_label.split('(')[0].trim() : 'Mesh';
+  const perfPart = i.perf_label ? i.perf_label.split('(')[0].trim() : 'Perforation';
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Pressure Drop Report${i.tag_no ? ' - ' + i.tag_no : ''}</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family: Arial, sans-serif; font-size: 9pt; color: #000; background:#fff; padding:12mm 10mm; }
+  .outer-box { border:1.5px solid #000; }
+  .title-section { text-align:center; padding:6px 8px; border-bottom:1.5px solid #000; }
+  .main-title { font-size:12pt; font-weight:bold; letter-spacing:.5px; }
+  .strainer-subtitle { font-size:8.5pt; margin-top:3px; }
+  .tag-section { border-bottom:1px solid #000; padding:4px 8px; }
+  .tag-header { font-size:8pt; font-weight:bold; margin-bottom:3px; }
+  .tag-note { font-size:7pt; color:#c00; font-weight:normal; }
+  .tag-grid { width:100%; border-collapse:collapse; }
+  .tag-grid td { border:1px solid #aaa; padding:2px 8px; font-size:8.5pt; width:33.33%; height:18px; }
+  .info-section { border-bottom:1px solid #000; padding:5px 8px; }
+  .info-tbl { border-collapse:collapse; font-size:9pt; }
+  .info-tbl td { padding:1px 4px; line-height:1.7; }
+  .inf-lbl { width:150px; font-weight:normal; }
+  .dim-section { border-bottom:1px solid #000; padding:5px 8px; }
+  .dim-tbl { width:100%; border-collapse:collapse; font-size:9pt; }
+  .dim-tbl td { padding:1px 4px; line-height:1.7; }
+  .dl { width:175px; }
+  .dv { width:120px; }
+  .dsep { width:20px; }
+  .param-section { border-bottom:1px solid #000; padding:5px 8px; }
+  .param-tbl { width:100%; border-collapse:collapse; font-size:9pt; }
+  .param-tbl td { padding:1px 4px; line-height:1.7; }
+  .pl { width:220px; }
+  .pv { width:90px; }
+  .psep { width:20px; }
+  .prl { width:60px; }
+  .results-title { background:#c8d8e8; text-align:center; font-weight:bold; font-size:9.5pt; padding:4px; border-top:1px solid #888; border-bottom:1px solid #888; letter-spacing:1px; }
+  table.res { width:100%; border-collapse:collapse; font-size:8.5pt; }
+  table.res th, table.res td { border:1px solid #888; padding:3px 8px; text-align:left; }
+  table.res th { background:#d0dce8; font-weight:bold; text-align:center; }
+  table.res td.num { text-align:right; font-family:monospace; }
+  table.res tr.g-row td { background:#ffff00; font-weight:bold; }
+  table.res tr.dp-row td { font-weight:bold; }
+  .notation-section { border-top:1px solid #000; padding:6px 8px; font-size:8pt; }
+  .notation-title { font-weight:bold; margin-bottom:3px; }
+  .ntbl { width:100%; border-collapse:collapse; }
+  .ntbl td { padding:1px 4px; line-height:1.65; width:50%; vertical-align:top; }
+  .ntbl td.full { width:100%; }
+  .footer { margin-top:8px; font-size:7.5pt; color:#333; text-align:right; }
+  @page { size:A4 portrait; margin:0; }
+  @media print { body { padding:8mm 8mm; } button { display:none; } }
+</style>
+</head>
+<body>
+<div class="outer-box">
+
+  <!-- TITLE -->
+  <div class="title-section">
+    <div class="main-title">PRESSURE DROP CALCULATION</div>
+    <div class="strainer-subtitle">${strainerHeading}</div>
+  </div>
+
+  <!-- TAG NO -->
+  <div class="tag-section">
+    <div class="tag-header">TAG NO:</div>
+    ${(() => {
+      const tags = i.tag_no ? i.tag_no.split(',').map(t => t.trim()).filter(Boolean) : [];
+      if (!tags.length) return '<table class="tag-grid"><tr><td></td></tr></table>';
+      const cols = 3;
+      let html = '<table class="tag-grid">';
+      for (let r = 0; r < Math.ceil(tags.length / cols); r++) {
+        const rowTags = tags.slice(r * cols, r * cols + cols);
+        html += '<tr>' + rowTags.map(t => `<td>${esc(t)}</td>`).join('') + '</tr>';
+      }
+      html += '</table>';
+      return html;
+    })()}
+  </div>
+
+  <!-- CUSTOMER INFO -->
+  <div class="info-section">
+    <table class="info-tbl">
+      <tr><td class="inf-lbl">Customer Name</td><td style="width:12px;">:</td><td>${esc(i.company_name)}</td></tr>
+      <tr><td class="inf-lbl">Consultant Name</td><td>:</td><td>${esc(i.consultant_name)}</td></tr>
+      <tr><td class="inf-lbl">Project No.</td><td>:</td><td>${esc(i.project_no)}</td></tr>
+    </table>
+  </div>
+
+  <!-- SIZE / DIMENSIONS -->
+  <div class="dim-section">
+    <table class="dim-tbl">
+      <tr>
+        <td class="dl">Size</td><td class="dv">: ${i.pipe_nps ? i.pipe_nps + '&quot;' : '\u2014'}</td><td class="dsep"></td>
+        <td class="dl">Diameter of screen</td><td class="dv">: ${i.D_screen_cm} cm</td>
+      </tr>
+      <tr>
+        <td class="dl">Class</td><td class="dv">: ${i.rating || '\u2014'}</td><td class="dsep"></td>
+        <td class="dl">Length of screen</td><td class="dv">: ${i.L_cm} cm</td>
+      </tr>
+      <tr>
+        <td class="dl">Schedule</td><td class="dv">: ${i.schedule || '\u2014'}</td><td class="dsep"></td>
+        <td class="dl">Surface area of the screen</td><td class="dv">: ${n(i.A100,4)} cm&#178;</td>
+      </tr>
+      <tr>
+        <td class="dl">Pipe ID</td><td class="dv">: ${i.D_pipe_cm} cm</td><td class="dsep"></td>
+        <td class="dl">Cross section area of pipe</td><td class="dv">: ${n(i.A_pipe,2)} cm&#178;</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- INPUT PARAMETERS -->
+  <div class="param-section">
+    <table class="param-tbl">
+      <tr>
+        <td class="pl">Q (Mesh Size : ${meshPart})</td><td class="pv">: ${i.Q_pct} %</td><td class="psep"></td>
+        <td class="prl">Media</td><td>: ${esc(i.fluid_name) || '\u2014'}</td>
+      </tr>
+      <tr>
+        <td class="pl">P ( ${perfPart} )</td><td class="pv">: ${i.P_pct} %</td><td class="psep"></td>
+        <td class="prl">p</td><td>: ${i.rho} kg/m&#179;</td>
+      </tr>
+      <tr>
+        <td class="pl">D</td><td class="pv">: ${i.D_open_cm} cm</td><td class="psep"></td>
+        <td class="prl">&#956;</td><td>: ${i.mu_cP} cP</td>
+      </tr>
+      <tr>
+        <td class="pl">&#945;</td><td class="pv">: ${n(d.alpha,4)} mmSq</td><td class="psep"></td>
+        <td class="prl">Flow</td><td>: ${i.W} ${i.flow_unit}</td>
+      </tr>
+      <tr>
+        <td class="pl"></td><td class="pv"></td><td class="psep"></td>
+        <td class="prl">Rating</td><td>: ${i.rating ? '#' + i.rating : '\u2014'}</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- RESULTS TABLE -->
+  <div>
+    <div class="results-title">RESULTS</div>
+    <table class="res">
+      <thead>
+        <tr>
+          <th style="width:38%;text-align:left;"></th>
+          <th style="width:22%;">&#64;50% Clogged<br>Condition</th>
+          <th style="width:22%;">&#64;100% Clean Condition</th>
+          <th style="width:18%;">Unit</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Surface area of the screen</td><td class="num">${n(c50.surface_area_cm2,2)}</td><td class="num">${n(c100.surface_area_cm2,2)}</td><td>cm&#178;</td></tr>
+        <tr><td>Net area of the screen</td><td class="num">${n(c50.net_surface_area_cm2,2)}</td><td class="num">${n(c100.net_surface_area_cm2,2)}</td><td>cm&#178;</td></tr>
+        <tr><td>Ratio</td><td class="num">${n(c50.screening_area_ratio,2)}</td><td class="num">${n(c100.screening_area_ratio,2)}</td><td></td></tr>
+        <tr><td>V</td><td class="num">${n(c50.V_cm_s,3)}</td><td class="num">${n(c100.V_cm_s,3)}</td><td>cm/sec</td></tr>
+        <tr><td>Re</td><td class="num">${n(c50.Re,4)}</td><td class="num">${n(c100.Re,4)}</td><td></td></tr>
+        <tr><td>C</td><td class="num">${c50.C}</td><td class="num">${c100.C}</td><td></td></tr>
+        <tr class="g-row"><td>g</td><td class="num">9.81</td><td class="num">9.81</td><td>m/sec&#178;</td></tr>
+        <tr><td>K</td><td class="num">${n(c50.K,2)}</td><td class="num">${n(c100.K,2)}</td><td></td></tr>
+        <tr class="dp-row"><td>&#916;P</td><td class="num">${formatDP(c50.delta_P_kg_cm2)}</td><td class="num">${formatDP(c100.delta_P_kg_cm2)}</td><td>Kg/cm&#178; (g)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- NOTATIONS -->
+  <div class="notation-section">
+    <div class="notation-title">Notations and Definition:</div>
+    <table class="ntbl">
+      <tr><td>&#916;P &nbsp;- Pressure drop</td><td>Re &nbsp;- Reynolds No.</td></tr>
+      <tr><td>C &nbsp;&nbsp;- Coefficient of discharge (From Perry page no. 6-20)</td><td>D &nbsp;&nbsp;- opening width</td></tr>
+      <tr><td colspan="2">&#945; &nbsp;&nbsp;- Effective opening area</td></tr>
+      <tr><td>g &nbsp;&nbsp;- Gravitational force cm/sec&#178;</td><td>p &nbsp;&nbsp;- Density of media in kg/m&#179;</td></tr>
+      <tr><td>Q &nbsp;&nbsp;- % opening in wire mesh</td><td>&#956; &nbsp;&nbsp;- viscosity of media in m/cm&#179;</td></tr>
+      <tr><td>P &nbsp;&nbsp;- % opening in perforated sheet</td><td>K &nbsp;&nbsp;- Velocity Head Loss</td></tr>
+      <tr><td colspan="2">V &nbsp;&nbsp;- Superficial Velocity of fluid based upon the gross area of the screen cm/sec</td></tr>
+    </table>
+  </div>
+
+</div>
+<div class="footer">Generated by Strainer Pressure Drop Calculator</div>
+<script>window.onload = () => window.print();<\/script>
+</body></html>`;
+
+
+  const win = window.open('', '_blank', 'width=900,height=700');
+  win.document.write(html);
+  win.document.close();
+});
+
+// ── Clear ─────────────────────────────────────────────────────────────────────
+$('btn-clear').addEventListener('click', () => {
+  ['tag_no','fluid_name','company_name','project_no','consultant_name',
+   'rho','mu_cP','flow_W',
+   'L_cm','D_screen_cm','D_pipe_cm','D_open_cm','Q_pct','P_pct',
+   'disp_A100','disp_A50','disp_A_pipe','disp_alpha'
+  ].forEach(id => $(id).value = '');
+  ['pipe_nps_select','rating_select','mesh_select','perf_select','schedule_select'].forEach(id => $(id).selectedIndex = 0);
+  $('flow_unit').value = 'kg/hr';
+  $('summary-band').style.display    = 'none';
+  $('results-section').style.display = 'none';
+  hideError();
+});
+
+// ── Image zoom lightbox ──────────────────────────────────────────────────────
+function openImgZoom(imgEl) {
+  const lb = $('img-lightbox');
+  $('lightbox-img').src = imgEl.src;
+  $('lightbox-img').alt = imgEl.alt;
+  $('lightbox-label').textContent = $('strainer-img-label').textContent;
+  lb.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+function closeImgZoom() {
+  $('img-lightbox').style.display = 'none';
+  document.body.style.overflow = '';
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeImgZoom(); });
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+loadLookups();
+
+// ── Terms & Conditions ────────────────────────────────────────────────────────
+(function initTnC() {
+  const sessionKey = 'tnc_accepted_{{ username }}';
+  if (sessionStorage.getItem(sessionKey)) return;  // already accepted this session
+
+  const overlay   = $('tnc-overlay');
+  const checkbox  = $('tnc-checkbox');
+  const acceptBtn = $('tnc-accept-btn');
+  const declineBtn= $('tnc-decline-btn');
+  const dateSpan  = $('tnc-date');
+  const username  = '{{ username }}';
+
+  // Show effective date
+  dateSpan.textContent = new Date().toLocaleDateString('en-GB', {day:'2-digit', month:'long', year:'numeric'});
+
+  // Show the modal
+  overlay.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+
+  // Enable accept button only when checkbox is ticked
+  checkbox.addEventListener('change', () => {
+    acceptBtn.disabled = !checkbox.checked;
+    acceptBtn.style.opacity   = checkbox.checked ? '1'  : '.5';
+    acceptBtn.style.cursor    = checkbox.checked ? 'pointer' : 'not-allowed';
+  });
+
+  // Decline → logout
+  declineBtn.addEventListener('click', () => {
+    window.location.href = '/logout';
+  });
+
+  // Accept → email signed T&C, close modal
+  acceptBtn.addEventListener('click', async () => {
+    if (!checkbox.checked) return;
+
+    const now = new Date();
+    const ts  = now.toLocaleString('en-GB', {day:'2-digit', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit', second:'2-digit'});
+
+    const tncHTML = `<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8">
+<title>T&C Acceptance — ${username}</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:Arial,sans-serif; font-size:9.5pt; color:#000; padding:14mm 16mm; }
+  h1 { font-size:12pt; text-align:center; margin-bottom:4px; }
+  h2 { font-size:9.5pt; color:#1a3c5e; margin:12px 0 4px; }
+  p, li { line-height:1.65; margin-bottom:4px; }
+  ul { margin-left:18px; margin-bottom:6px; }
+  .header-box { border:1.5px solid #1a3c5e; padding:10px 14px; margin-bottom:16px; border-radius:4px; }
+  .sig-box { border:1px solid #888; padding:10px 14px; margin-top:20px; border-radius:4px; background:#f7f9fb; }
+  .sig-box p { margin:3px 0; }
+</style></head><body>
+
+<div class="header-box">
+  <h1>⚙ Strainer Pressure Drop Calculator</h1>
+  <p style="text-align:center; font-size:8.5pt; color:#444; margin-top:4px;">
+    Terms &amp; Conditions — User Acceptance Record
+  </p>
+</div>
+
+<h2>1. Purpose and Scope</h2>
+<p>The Software assists qualified engineers in estimating pressure drop across Y-Type, Basket, T-Type (Monkey), T-Type (Boat), and Conical strainers under clean and partially clogged conditions. Results are in CGS units (kg/cm²) and are engineering estimates only.</p>
+
+<h2>2. Engineering Disclaimer</h2>
+<ul>
+  <li>Results are <strong>estimates</strong> and must be validated by a qualified engineer before use in final design, procurement, or installation.</li>
+  <li>The Software does not account for phase changes, two-phase flow, non-Newtonian fluids, transient conditions, or site-specific effects.</li>
+  <li>The user is solely responsible for verifying the suitability of results for their intended application.</li>
+</ul>
+
+<h2>3. Limitation of Liability</h2>
+<p>The developers shall not be liable for any damages arising from use or misuse of results, including equipment damage, process failure, personal injury, or financial loss.</p>
+
+<h2>4. Intellectual Property</h2>
+<p>The Software, its source code, calculation logic, and documentation are proprietary. Reverse-engineering, copying, redistribution, or sublicensing is prohibited.</p>
+
+<h2>5. Data Accuracy and Input Responsibility</h2>
+<p>The user is responsible for the accuracy of all input data. The Software does not independently validate physical plausibility beyond basic range checks.</p>
+
+<h2>6. Authorized Use</h2>
+<p>Access is granted on a per-user, non-transferable basis. Sharing of login credentials is prohibited.</p>
+
+<h2>7. Governing Standards</h2>
+<p>Calculations are based on principles consistent with Perry's Chemical Engineers' Handbook. The Software does not certify compliance with any specific national or international standard unless explicitly stated.</p>
+
+<div class="sig-box">
+  <p><strong>User Acceptance Certificate</strong></p>
+  <p style="margin-top:8px;">I, the undersigned, confirm that I have read, understood, and agree to the Terms and Conditions of the Strainer Pressure Drop Calculator.</p>
+  <p style="margin-top:10px;"><strong>Username:</strong> &nbsp; ${username}</p>
+  <p><strong>Date &amp; Time:</strong> &nbsp; ${ts}</p>
+  <p style="margin-top:16px;"><strong>Signature:</strong> &nbsp; ___________________________</p>
+  <p style="color:#888; font-size:8pt; margin-top:6px;">This document was auto-generated upon acceptance of Terms &amp; Conditions.</p>
+</div>
+
+</body></html>`;
+
+    // Save acceptance on server
+    acceptBtn.disabled = true;
+    acceptBtn.textContent = 'Saving…';
+    try {
+      const fd = new FormData();
+      fd.append('html_body', tncHTML);
+      const resp = await fetch('/api/accept-tnc', { method: 'POST', body: fd });
+      const data = await resp.json();
+      if (!resp.ok) {
+        alert('Failed to record T&C acceptance: ' + (data.detail || 'Unknown error'));
+        acceptBtn.disabled = false;
+        acceptBtn.textContent = '✓ I Accept';
+        return;
+      }
+    } catch (err) {
+      alert('Network error: ' + err.message);
+      acceptBtn.disabled = false;
+      acceptBtn.textContent = '✓ I Accept';
+      return;
+    }
+
+    // Mark as accepted for this session
+    sessionStorage.setItem(sessionKey, '1');
+    overlay.style.display = 'none';
+    document.body.style.overflow = '';
+  });
+})();
+</script>
+</body>
+</html>

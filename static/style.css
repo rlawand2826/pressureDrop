@@ -1,0 +1,216 @@
+/* ── Y Stainer Pressure Drop Calculator — custom styles ────────────────────── */
+
+/* ── Global ─────────────────────────────────────────────────────────────────── */
+body {
+  background: #f0f2f5;
+  font-size: 0.875rem;
+}
+
+/* ── Auth pages ─────────────────────────────────────────────────────────────── */
+.auth-wrapper {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #1565c0 0%, #0d47a1 60%, #01579b 100%);
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 420px;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+  overflow: hidden;
+}
+
+.auth-card .card-header {
+  background: #1565c0;
+  color: #fff;
+  text-align: center;
+  padding: 1.4rem 1rem;
+}
+
+.auth-card .card-header h4 {
+  margin: 0;
+  font-weight: 700;
+  letter-spacing: .5px;
+}
+
+.auth-card .card-header .subtitle {
+  font-size: 0.78rem;
+  opacity: .8;
+  margin-top: 4px;
+}
+
+/* ── Navbar ─────────────────────────────────────────────────────────────────── */
+.app-navbar {
+  background: #1565c0;
+  padding: .45rem 1rem;
+}
+
+.app-navbar .brand-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: .3px;
+}
+
+.app-navbar .brand-sub {
+  font-size: 0.72rem;
+  color: #bbdefb;
+}
+
+/* ── Section headers ────────────────────────────────────────────────────────── */
+.section-header {
+  background: #1565c0;
+  color: #fff;
+  padding: .3rem .75rem;
+  font-size: .78rem;
+  font-weight: 600;
+  letter-spacing: .3px;
+  border-radius: 4px 4px 0 0;
+}
+
+.section-header.red   { background: #c62828; }
+.section-header.green { background: #2e7d32; }
+
+/* ── Card tweaks ────────────────────────────────────────────────────────────── */
+.calc-card {
+  border: 1px solid #c9d3e0;
+  border-radius: 6px;
+  background: #fff;
+}
+
+/* ── Form labels & computed fields ─────────────────────────────────────────── */
+.form-label-sm {
+  font-size: .75rem;
+  color: #444;
+  margin-bottom: 1px;
+  font-weight: 500;
+}
+
+input.computed,
+input.result-out {
+  background: #fffde7 !important;
+  font-weight: 600;
+  color: #1a237e;
+}
+
+/* ── Type-of-strainer radio group ───────────────────────────────────────────── */
+.strainer-type-group .form-check-label {
+  font-size: .76rem;
+}
+
+/* ── Summary band ───────────────────────────────────────────────────────────── */
+#summary-band {
+  background: #e3f2fd;
+  border: 1px solid #90caf9;
+  border-radius: 6px;
+  padding: .45rem .9rem;
+  font-size: .8rem;
+}
+
+#summary-band .sum-item {
+  display: inline-block;
+  margin-right: 1.4rem;
+}
+
+#summary-band .sum-label {
+  color: #555;
+  font-weight: 500;
+}
+
+#summary-band .sum-val {
+  color: #1a237e;
+  font-weight: 700;
+}
+
+/* ── Result panels ───────────────────────────────────────────────────────────── */
+.result-panel {
+  border-radius: 6px;
+  overflow: hidden;
+  border: 2px solid;
+}
+
+.result-panel.clogged { border-color: #c62828; }
+.result-panel.clean   { border-color: #2e7d32; }
+
+.result-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.result-table tr td {
+  padding: 3px 8px;
+  border-bottom: 1px solid #e8e8e8;
+  font-size: .8rem;
+}
+
+.result-table tr td:first-child {
+  color: #444;
+  width: 58%;
+}
+
+.result-table tr td:nth-child(2) {
+  font-weight: 600;
+  color: #1a237e;
+  background: #fffde7;
+  text-align: right;
+  min-width: 110px;
+}
+
+.result-table tr td:last-child {
+  color: #666;
+  font-size: .73rem;
+  white-space: nowrap;
+  padding-left: 4px;
+}
+
+.result-table .dp-row td:nth-child(2) {
+  background: #fff9c4;
+  font-size: .85rem;
+  font-weight: 700;
+  color: #b71c1c;
+}
+
+.result-table .dp-row td:first-child {
+  font-weight: 600;
+}
+
+/* C coefficient highlight */
+.result-table .c-row td:nth-child(2) {
+  background: #ffe0b2;
+  color: #e65100;
+}
+
+/* ── Calculate button ─────────────────────────────────────────────────────────── */
+#btn-calc {
+  background: #c62828;
+  border: none;
+  color: #fff;
+  font-weight: 700;
+  font-size: .95rem;
+  letter-spacing: .5px;
+  padding: .55rem 2rem;
+  border-radius: 6px;
+  transition: background .2s;
+}
+
+#btn-calc:hover  { background: #b71c1c; }
+#btn-calc:active { background: #8d1111; }
+
+/* ── Error banner ────────────────────────────────────────────────────────────── */
+#error-banner {
+  display: none;
+  background: #ffebee;
+  border: 1px solid #ef9a9a;
+  border-radius: 5px;
+  padding: .4rem .8rem;
+  color: #b71c1c;
+  font-size: .8rem;
+  margin-bottom: .5rem;
+}
+
+/* ── Scrollbar styling ───────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-thumb { background: #aaa; border-radius: 3px; }

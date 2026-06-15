@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.pyc
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Sensitive data — never commit these
+.env
+.session_secret
+users.db
+tnc_acceptances/
+
+# Excel reference data — included in repo so Railway can load it
+# *.xlsx
+
+# Pytest / coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# OS artifacts
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
