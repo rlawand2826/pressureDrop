@@ -289,6 +289,7 @@ def init_db():
 | `DATABASE_URL` | Auto (Railway Postgres) | — | PostgreSQL connection string |
 | `DATA_DIR` | Yes (if SQLite) | `.` | Directory for `users.db` |
 | `ENVIRONMENT` | No | `development` | Set to `production` |
+| `MAX_CALCULATIONS_PER_USER` | No | `10` | Caps how many `/calculate` requests each logged-in user can make (lifetime count, stored per user). Raise/lower by setting this in Railway → Variables. |
 
 **Generate SECRET_KEY:**
 ```bash

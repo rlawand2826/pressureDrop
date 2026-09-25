@@ -50,7 +50,18 @@ from schemas import (
 )
 from calculator import calculate
 from config import MESH_DATA, PERF_SHEET_DATA, STRAINER_DATA, PIPE_NPS_DATA, PR_CLASS_DATA, PIPE_SCHEDULE_DATA
-from database import init_db, create_user, get_user_by_username, verify_password
+from database import (
+    init_db,
+    create_user,
+    get_user_by_username,
+    verify_password,
+    get_calc_count,
+    increment_calc_count,
+)
+
+# -- Per-user calculation limit --------------------------------------------------
+# Set MAX_CALCULATIONS_PER_USER in Railway env vars to change the cap (default: 10).
+MAX_CALCULATIONS_PER_USER = int(os.environ.get("MAX_CALCULATIONS_PER_USER", "10"))
 
 # -- Session secret ------------------------------------------------------------
 # Production (Railway): set SESSION_SECRET_KEY env var in Railway dashboard.
@@ -111,6 +122,22 @@ templates = Jinja2Templates(directory=str(_BASE / "templates"))
 # -- Auth helpers ---------------------------------------------------------------
 def _current_user(request: Request) -> str | None:
     return request.session.get("username")
+
+
+def _enforce_calc_limit(request: Request) -> str:
+    """Requires login and blocks the request once the user hits MAX_CALCULATIONS_PER_USER.
+
+    Returns the username on success; raises HTTPException otherwise.
+    """
+    user = _current_user(request)
+    if not user:
+        raise HTTPException(status_code=401, detail="Please log in to perform calculations.")
+    if get_calc_count(user) >= MAX_CALCULATIONS_PER_USER:
+        raise HTTPException(
+            status_code=429,
+            detail=f"Calculation limit reached ({MAX_CALCULATIONS_PER_USER} per user). Contact the administrator for more.",
+        )
+    return user
 
 
 # -- Web routes -----------------------------------------------------------------
@@ -204,8 +231,9 @@ def accept_tnc(request: Request, html_body: str = Form(...)):
     summary="Calculate pressure drop -- direct inputs",
     tags=["calculation"],
 )
-def calculate_direct(req: CalculationRequest) -> CalculationResponse:
+def calculate_direct(req: CalculationRequest, request: Request) -> CalculationResponse:
     """All geometry and fluid properties are provided directly by the caller."""
+    user = _enforce_calc_limit(request)
     result = calculate(
         rho=req.rho,
         mu_cP=req.mu_cP,
@@ -220,6 +248,7 @@ def calculate_direct(req: CalculationRequest) -> CalculationResponse:
         strainer_type=req.strainer_type,
         D_screen2_cm=req.D_screen2_cm,
     )
+    increment_calc_count(user)
     return CalculationResponse(tag_no=req.tag_no, fluid_name=req.fluid_name, **result)
 
 
@@ -231,7 +260,7 @@ def calculate_direct(req: CalculationRequest) -> CalculationResponse:
     summary="Calculate pressure drop -- model / mesh / perf selection",
     tags=["calculation"],
 )
-def calculate_from_selection(req: LookupRequest) -> CalculationResponse:
+def calculate_from_selection(req: LookupRequest, request: Request) -> CalculationResponse:
     """Resolve geometry from the reference tables, then run the calculation.
 
     - model + nps  ->  D_pipe_cm, D_screen_cm, L_cm   (Strainer data sheet)
@@ -240,6 +269,8 @@ def calculate_from_selection(req: LookupRequest) -> CalculationResponse:
 
     No-Mesh case: set mesh=0 and provide D_open_cm_override.
     """
+    user = _enforce_calc_limit(request)
+
     # -- Strainer geometry ------------------------------------------------------
     strainer_key = (req.model.strip().upper(), req.nps.strip())
     if strainer_key not in STRAINER_DATA:
@@ -297,6 +328,7 @@ def calculate_from_selection(req: LookupRequest) -> CalculationResponse:
         Q_pct=Q_pct,
         P_pct=P_pct,
     )
+    increment_calc_count(user)
     return CalculationResponse(tag_no=req.tag_no, fluid_name=req.fluid_name, **result)
 
 

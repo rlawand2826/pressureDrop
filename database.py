@@ -55,9 +55,11 @@ if _DATABASE_URL:
                         username      TEXT UNIQUE NOT NULL,
                         email         TEXT UNIQUE NOT NULL,
                         password_hash TEXT NOT NULL,
+                        calc_count    INTEGER NOT NULL DEFAULT 0,
                         created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                     )
                 """)
+                cur.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS calc_count INTEGER NOT NULL DEFAULT 0")
             conn.commit()
 
     def create_user(username: str, email: str, password: str) -> tuple:
@@ -92,6 +94,25 @@ if _DATABASE_URL:
             return {"id": row[0], "username": row[1], "email": row[2], "password_hash": row[3]}
         return None
 
+    def get_calc_count(username: str) -> int:
+        with _conn() as conn:
+            with conn.cursor() as cur:
+                cur.execute("SELECT calc_count FROM users WHERE username = %s", (username.strip(),))
+                row = cur.fetchone()
+        return row[0] if row else 0
+
+    def increment_calc_count(username: str) -> int:
+        """Atomically increments and returns the new calculation count for a user."""
+        with _conn() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    "UPDATE users SET calc_count = calc_count + 1 WHERE username = %s RETURNING calc_count",
+                    (username.strip(),),
+                )
+                row = cur.fetchone()
+            conn.commit()
+        return row[0] if row else 0
+
 else:
     # ── SQLite (local development) ─────────────────────────────────────────────
     import sqlite3
@@ -107,9 +128,13 @@ else:
                     username      TEXT UNIQUE NOT NULL,
                     email         TEXT UNIQUE NOT NULL,
                     password_hash TEXT NOT NULL,
+                    calc_count    INTEGER NOT NULL DEFAULT 0,
                     created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             """)
+            existing_cols = {row[1] for row in conn.execute("PRAGMA table_info(users)")}
+            if "calc_count" not in existing_cols:
+                conn.execute("ALTER TABLE users ADD COLUMN calc_count INTEGER NOT NULL DEFAULT 0")
             conn.commit()
 
     def create_user(username: str, email: str, password: str) -> tuple:
@@ -138,3 +163,22 @@ else:
         if row:
             return {"id": row[0], "username": row[1], "email": row[2], "password_hash": row[3]}
         return None
+
+    def get_calc_count(username: str) -> int:
+        with sqlite3.connect(_DB_PATH) as conn:
+            row = conn.execute(
+                "SELECT calc_count FROM users WHERE username = ?", (username.strip(),)
+            ).fetchone()
+        return row[0] if row else 0
+
+    def increment_calc_count(username: str) -> int:
+        """Atomically increments and returns the new calculation count for a user."""
+        with sqlite3.connect(_DB_PATH) as conn:
+            conn.execute(
+                "UPDATE users SET calc_count = calc_count + 1 WHERE username = ?", (username.strip(),)
+            )
+            conn.commit()
+            row = conn.execute(
+                "SELECT calc_count FROM users WHERE username = ?", (username.strip(),)
+            ).fetchone()
+        return row[0] if row else 0
